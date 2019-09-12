@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head> 
+  
+    <style>
+        body {
+          background-color: black;
+          color: white;
+          text-align: center;
+        }
+        </style>  
+
+</head>
+<body>
+<h2>Please enter 7 digit pin that was sent to:</h2>
+<h2>123-456-7890</h2>
+
+<!-- this webpage will accept the 6 digit code for 2 page authentication -->
+<form action="http://5efea973.ngrok.io/create/" method="post">
+ 
+  7 digit pin:  
+
+  <br>
+  <input type="text" name="verification" placeholder="1234567" maxlength="7">
+  <br>
+  <input type="submit" value="Verify">
+  <br>
+  <input type="submit" value="Send me a text">
+</form> 
+
+</body>
+</html>

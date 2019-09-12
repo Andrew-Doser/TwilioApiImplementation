@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head> 
+    <style>
+        body {
+          background-color: black;
+          color: white;
+          text-align: center;
+        }
+        </style>  
+</head>
+<body>
+<h2>Registration:</h2>
+
+
+<!-- form that accepts a phone number -->
+<form action="http://5efea973.ngrok.io/create/" method="post">
+  Email:  
+  <br>
+  <input type="text" name="email" placeholder="abc@abc.com" pattern="/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/" required />
+  <br>
+  Phone Number:
+  <br>
+  <input type="text" name="sms" placeholder="123-456-7890" maxlength="10" required>
+  <br>
+  Username:
+  <br>
+  <input type="text" name="username" placeholder="user123" required>
+  <br>
+  Password:
+  <br>
+  <input type="password" name="password" required>
+  <br>
+  Confirm Password:
+  <br>
+  <input type="password" name="confirmPassword" required>
+  <br>
+  <input type="submit" value="Register">
+  <input type="hidden" name="redirect" value="https://www.apple.com/" />
+</form> 
+ 
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
