@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from twilio.rest import Client
 from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404
 from .models import CustomUser
 from authy.api import AuthyApiClient
 from .serializers import CustomUserSerializer
@@ -332,7 +333,12 @@ def verify_text_view(request):
                 )
     return HttpResponse(str(verification))
 
-class CustomUserAPIView(mixins.CreateModelMixin, generics.ListAPIView):
+class CustomUserAPIView(
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.RetrieveModelMixin, 
+    generics.ListAPIView):
     permission_classes = []
     authentication_classes = []
     serializer_class = CustomUserSerializer
@@ -343,9 +349,30 @@ class CustomUserAPIView(mixins.CreateModelMixin, generics.ListAPIView):
         if query is not None:
             qs = qs.filter(content__icontains=query)
         return qs
+    def get_object(self):
+        request = self.request
+        passed_id = request.GET.get('id')
+        queryset = self.get_queryset()
+        obj = None
+        if passed_id is not None:
+            obj = get_object_or_404(queryset, id=passed_id)
+            self.check_object_permissions(request, obj)
+        return obj
+
+    def get(self, request, *args, **kwargs):
+        passed_id = request.GET.get('id')
+        if passed_id is not None:
+            return self.retrieve(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
 
 
 class CustomUserDetailAPIView(mixins.UpdateModelMixin, generics.RetrieveAPIView):
