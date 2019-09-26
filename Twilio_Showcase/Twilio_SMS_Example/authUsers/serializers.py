@@ -12,4 +12,5 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'email',
             'twilioIdentity',
             'AuthyIdentity',
+            'password',
         ]

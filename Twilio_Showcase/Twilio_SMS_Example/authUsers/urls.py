@@ -2,11 +2,13 @@ from django.urls import path, re_path
 from .views import (
     create_text_view,
     create_user_view,
+    verify_text_view,
     verify_tfa_user_view,
     send_reminder_view,
     send_tfa_user_view,
     CustomUserAPIView,
     CustomUserDetailAPIView,
+    login_user_view,
 )
 
 
@@ -19,6 +21,8 @@ urlpatterns = [
     path('remind/', send_reminder_view, name='remind'),
     path('authtoken/', send_tfa_user_view, name='authtoken'),
     path('viewlist/', CustomUserAPIView.as_view(), name='viewlist'),
+    path('verifysms/', verify_text_view, name='smsverify'),
+    path('login/', login_user_view, name='login'),
     re_path(r'^(?P<pk>\d+)/$', CustomUserDetailAPIView.as_view()),
     
 ]

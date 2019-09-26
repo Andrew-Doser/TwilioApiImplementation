@@ -1,12 +1,12 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from twilio.rest import Client
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from .models import CustomUser
 from authy.api import AuthyApiClient
 from .serializers import CustomUserSerializer
 from rest_framework import viewsets, mixins, generics
-
+from rest_framework.parsers import JSONParser
 
 """
     This file contains 5 different views:
@@ -52,7 +52,13 @@ authy_api = AuthyApiClient(AUTHY_API_KEY)
 
 
 
-
+"""
+Twilio Verification API KEY is shown below
+"""
+twilioVerifyAPI = 'ACe7988364e11789d2f64092ae9f90c166'
+twilioVerifyService = 'VAcde18ffeae3232408536fe532081fc91'
+twilioVerifyToken = '8b34e7ab4431754a59d5582bc92a4373'
+verifyClient = Client(twilioVerifyAPI, twilioVerifyToken)
 
 # Create your views here.
 @csrf_exempt
@@ -81,17 +87,18 @@ def create_user_view(request):
         Andrew Doser
         9/11/2019
     """
+    
     if request.method != "POST":
         return HttpResponse(status=500)
     data = request.POST
-
+    print(data)
     # Communicate with Michalangelo about how he will communicate 
     # the user data
-    userEmail = data['Email']
-    userPassword = data['Password']
+    userEmail = data['email']
+    userPassword = data['password']
     userCPassword = data['confirmPassword']
-    userPhoneNumber = data['PhoneNumber']
-    userName = data['UserName']
+    userPhoneNumber = data['phoneNumber']
+    userName = data['userName']
 
     if userPassword == userCPassword:
         # Below is where the user is register with Authy
@@ -104,11 +111,11 @@ def create_user_view(request):
 
         # Save the user to SQLite Database
         user = CustomUser(
-            email=userEmail,
-            password=userPassword, 
-            username=userName,
-            phoneNumber=userPhoneNumber,
-            AuthyIdentity=Auser.id) # Authy generates an ID when a user is registered
+            email           =userEmail,
+            password        =userPassword, 
+            username        =userName,
+            phoneNumber     =userPhoneNumber,
+            AuthyIdentity   =Auser.id) # Authy generates an ID when a user is registered
         # This ID is used to send the verification code
         user.save()
 
@@ -220,6 +227,36 @@ def send_reminder_view(request):
         body='Knok-Knok! This is your first Notify SMS')
 
 
+
+@csrf_exempt
+def login_user_view(request):
+    """
+    Purpose:
+        Return Data if the HTTP Request Get is
+        correct. HTTP body should have email and
+        password.
+    Fields:
+        data            =>  holds data from HTTP Request Get
+            UserName    => Holds username from HTTP
+            Password    => Holds password from HTTP
+    CreatedBy:
+        Andrew Doser
+        9/24/2019
+    """
+    #Need to verify if the HTTP request is a get request
+    if request.method != "POST":
+        return HttpResponse(status=401) #might change the status code
+
+    data_UserName = request.POST['username']
+    data_Password = request.POST['password']
+    selectedUser = CustomUser.objects.filter(email=data_UserName).first()
+    print(getattr(selectedUser, 'email'))
+    if selectedUser != None:
+        serializer = CustomUserSerializer(selectedUser)
+        return JsonResponse(serializer.data, safe=False)
+    else:
+        return HttpResponse(status=402)
+    
 @csrf_exempt
 def create_text_view(request):
     """
@@ -235,23 +272,65 @@ def create_text_view(request):
     """
     if request.method != "POST":
         return HttpResponse(status=404)
-    data = request.POST
-    data = request.POST.get('sms') # 'sms' should be the target phone number
+    data = request.POST['sms']
+    print('+1' + data)
+    # 'sms' should be the target phone number
     # client.messages.create() both creates and sends the text message
     # it returns a json object with information on it if 'create' passes
-    message = smsClient.messages \
-                .create(
-                    body="Thanks for signing up! You will be reminded!",
-                    from_='+15205954045',
-                    to=data
-                )
+    verification = verifyClient.verify \
+                     .services(twilioVerifyService) \
+                     .verifications \
+                     .create(to=('+1' + data), channel='sms')
 
     #message.media("https://farm8.staticflickr.com/7090/6941316406_80b4d6d50e_z_d.jpg")
 
 
 
 
-    return HttpResponse(str(message))
+    return HttpResponse(str(verification))
+
+
+@csrf_exempt
+def verify_text_view(request):
+    """
+    Purpose:
+        Take data from the HTTP Request POST to
+        verify code sent to user
+    Fields:
+        data     =>  holds data from HTTP Request Post
+            sms  =>  holds phone number for user
+            code =>  holds verification code
+        message  =>  holds data on the message created
+    CreatedBy:
+        Andrew Doser
+        9/23/2019
+    """
+    if request.method != "POST":
+        return HttpResponse(status=404)
+    data_sms = request.POST['sms']
+    data_code = request.POST['code']
+    print('+1' + data_sms)
+    # 'sms' should be the target phone number
+    # verifyClient.verify.services().verification_checks.create()
+    # Verifies a code sent to a specific phone number
+    # it returns a json object with information on if the verify passes
+    verification = verifyClient.verify \
+                     .services(twilioVerifyService) \
+                     .verification_checks \
+                     .create(to=('+1' + data_sms), code=data_code)
+
+    #message.media("https://farm8.staticflickr.com/7090/6941316406_80b4d6d50e_z_d.jpg")
+
+
+
+    if 'approved' in verification.status:
+        message = smsClient.messages \
+                .create(
+                    body="Thanks for verifying your Phone Number! Your all set for text reminders!",
+                    from_='+15205954045',
+                    to=('+1' + data_sms),
+                )
+    return HttpResponse(str(verification))
 
 class CustomUserAPIView(mixins.CreateModelMixin, generics.ListAPIView):
     permission_classes = []
