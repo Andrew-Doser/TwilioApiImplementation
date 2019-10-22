@@ -10,7 +10,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'id',
             'phoneNumber',
             'email',
-            'twilioIdentity',
-            'AuthyIdentity',
+            'username',
+            #'twilioIdentity',
+            #'AuthyIdentity',
             'password',
         ]

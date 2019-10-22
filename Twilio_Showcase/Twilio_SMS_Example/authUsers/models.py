@@ -12,8 +12,8 @@ class CustomUser(models.Model):
         else:
             return no + 1
     
-    twilioIdentity  = models.IntegerField(default=number, unique=True)
-    AuthyIdentity   = models.CharField(max_length=10, null=None)
+    #twilioIdentity  = models.IntegerField(default=number, unique=True)
+    #AuthyIdentity   = models.CharField(max_length=10)
     email           = models.TextField(blank=False)
     password        = models.TextField(blank=False)
     username        = models.TextField(blank=False)
